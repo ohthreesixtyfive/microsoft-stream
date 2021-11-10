@@ -10,7 +10,7 @@
 |---|---|:---:|
 |Single line of text|Title|No|
 |Multiple lines of text|Description|No|
-|Meeting Date|Date and Time|No|
+|Date and Time|MeetingDate|No|
 
 ## Additional notes
 
