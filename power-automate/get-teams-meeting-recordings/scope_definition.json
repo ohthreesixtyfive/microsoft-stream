@@ -1,0 +1,84 @@
+{
+    "id": "551f0c74-ea40-4b3a-a131-78be-28a18b10",
+    "brandColor": "#8C3900",
+    "connectionReferences": {
+        "shared_sharepointonline": {
+            "connection": {
+                "id": "/otsf_sharedsharepointonline_b3e61"
+            }
+        }
+    },
+    "connectorDisplayName": "Control",
+    "icon": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDMyIDMyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPg0KIDxwYXRoIGQ9Im0wIDBoMzJ2MzJoLTMyeiIgZmlsbD0iIzhDMzkwMCIvPg0KIDxwYXRoIGQ9Im04IDEwaDE2djEyaC0xNnptMTUgMTF2LTEwaC0xNHYxMHptLTItOHY2aC0xMHYtNnptLTEgNXYtNGgtOHY0eiIgZmlsbD0iI2ZmZiIvPg0KPC9zdmc+DQo=",
+    "isTrigger": false,
+    "operationName": "Get-Teams-Meeting-Recordings_",
+    "operationDefinition": {
+        "type": "Scope",
+        "actions": {
+            "Tenant-SharePoint-Url": {
+                "type": "Compose",
+                "inputs": "",
+                "runAfter": {},
+                "description": "Compose (eg: 'https://contoso.sharepoint.com')",
+                "metadata": {
+                    "operationMetadataId": "f0feb3c0-c27a-4f79-9886-a0f9f284b327"
+                }
+            },
+            "Get-Teams-Meeting-Recordings": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                    "host": {
+                        "connectionName": "shared_sharepointonline",
+                        "operationId": "HttpRequest",
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                        "dataset": "@outputs('Tenant-SharePoint-Url')",
+                        "parameters/method": "GET",
+                        "parameters/uri": "_api/search/query?querytext='ProgID:Media AND ProgID:Meeting'&selectproperties='Filename,SitePath,DocumentLink,Title'",
+                        "parameters/headers": {
+                            "Accept": "application/json;odata=nometadata"
+                        }
+                    },
+                    "authentication": {
+                        "type": "Raw",
+                        "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+                    }
+                },
+                "runAfter": {
+                    "Tenant-SharePoint-Url": [
+                        "Succeeded"
+                    ]
+                },
+                "description": "Send an HTTP request to SharePoint",
+                "metadata": {
+                    "operationMetadataId": "7d916c84-5687-4c1b-aefc-6d4b33d36ab4"
+                }
+            },
+            "Teams-Meeting-Recordings-Metadata": {
+                "type": "Select",
+                "inputs": {
+                    "from": "@outputs('Get-Teams-Meeting-Recordings')?['body/primaryQueryResult/relevantResults/table/rows']",
+                    "select": {
+                        "Filename": "@first(item()?['Cells'])?['Value']",
+                        "SitePath": "@last(take(item()?['Cells'], 2))?['Value']",
+                        "DocumentLink": "@last(take(item()?['Cells'], 3))?['Value']",
+                        "FilePath": "@replace(last(take(item()?['Cells'], 3))?['Value'], last(take(item()?['Cells'], 2))?['Value'], '')",
+                        "Title": "@last(take(item()?['Cells'], 4))?['Value']"
+                    }
+                },
+                "runAfter": {
+                    "Get-Teams-Meeting-Recordings": [
+                        "Succeeded"
+                    ]
+                },
+                "description": "Select"
+            }
+        },
+        "runAfter": {},
+        "description": "Made With ♥ by @ohthreesixfive",
+        "metadata": {
+            "operationMetadataId": "a452d1aa-48aa-4157-9db9-0ced4bffdc93"
+        }
+    }
+}
