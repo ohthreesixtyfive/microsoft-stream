@@ -1,10 +1,15 @@
 {
-    "id": "551f0c74-ea40-4b3a-a131-78be-28a18b10",
+    "id": "ce686488-dcd7-478b-be6d-7ddc-15358ddc",
     "brandColor": "#8C3900",
     "connectionReferences": {
         "shared_sharepointonline": {
             "connection": {
                 "id": "/otsf_sharedsharepointonline_b3e61"
+            }
+        },
+        "shared_sharepointonline_1": {
+            "connection": {
+                "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline/connections/c1e75bbd012644f98d0ac4e47519477a"
             }
         }
     },
@@ -35,7 +40,7 @@
                     "parameters": {
                         "dataset": "@outputs('Tenant-SharePoint-Url')",
                         "parameters/method": "GET",
-                        "parameters/uri": "_api/search/query?querytext='ProgID:Media AND ProgID:Meeting'&selectproperties='Filename,SitePath,DocumentLink,Title'",
+                        "parameters/uri": "_api/search/query?querytext='ProgID:Media AND ProgID:Meeting'&selectproperties='Filename,SitePath,DocumentLink,Title,Path,ListID,UniqueId'",
                         "parameters/headers": {
                             "Accept": "application/json;odata=nometadata"
                         }
@@ -60,11 +65,15 @@
                 "inputs": {
                     "from": "@outputs('Get-Teams-Meeting-Recordings')?['body/primaryQueryResult/relevantResults/table/rows']",
                     "select": {
-                        "Filename": "@first(item()?['Cells'])?['Value']",
-                        "SitePath": "@last(take(item()?['Cells'], 2))?['Value']",
-                        "DocumentLink": "@last(take(item()?['Cells'], 3))?['Value']",
-                        "FilePath": "@replace(last(take(item()?['Cells'], 3))?['Value'], last(take(item()?['Cells'], 2))?['Value'], '')",
-                        "Title": "@last(take(item()?['Cells'], 4))?['Value']"
+                        "Filename": "@xpath(\r\n    xml(\r\n        json(\r\n            concat(\r\n                '{\"Root\": { \"Cells\": ',\r\n                item()?['Cells'],\r\n                '}'\r\n            )\r\n        )\r\n    ),\r\n    'string(//Cells[Key=\"Filename\"]/Value)'\r\n)",
+                        "SitePath": "@xpath(\r\n    xml(\r\n        json(\r\n            concat(\r\n                '{\"Root\": { \"Cells\": ',\r\n                item()?['Cells'],\r\n                '}'\r\n            )\r\n        )\r\n    ),\r\n    'string(//Cells[Key=\"SitePath\"]/Value)'\r\n)",
+                        "DocumentLink": "@xpath(\r\n    xml(\r\n        json(\r\n            concat(\r\n                '{\"Root\": { \"Cells\": ',\r\n                item()?['Cells'],\r\n                '}'\r\n            )\r\n        )\r\n    ),\r\n    'string(//Cells[Key=\"DocumentLink\"]/Value)'\r\n)",
+                        "Title": "@xpath(\r\n    xml(\r\n        json(\r\n            concat(\r\n                '{\"Root\": { \"Cells\": ',\r\n                item()?['Cells'],\r\n                '}'\r\n            )\r\n        )\r\n    ),\r\n    'string(//Cells[Key=\"Title\"]/Value)'\r\n)",
+                        "ID": "@last(split(xpath(\r\n    xml(\r\n        json(\r\n            concat(\r\n                '{\"Root\": { \"Cells\": ',\r\n                item()?['Cells'],\r\n                '}'\r\n            )\r\n        )\r\n    ),\r\n    'string(//Cells[Key=\"Path\"]/Value)'\r\n), 'ID='))",
+                        "ListID": "@xpath(\r\n    xml(\r\n        json(\r\n            concat(\r\n                '{\"Root\": { \"Cells\": ',\r\n                item()?['Cells'],\r\n                '}'\r\n            )\r\n        )\r\n    ),\r\n    'string(//Cells[Key=\"ListID\"]/Value)'\r\n)",
+                        "UniqueID": "@xpath(\r\n    xml(\r\n        json(\r\n            concat(\r\n                '{\"Root\": { \"Cells\": ',\r\n                item()?['Cells'],\r\n                '}'\r\n            )\r\n        )\r\n    ),\r\n    'string(//Cells[Key=\"UniqueId\"]/Value)'\r\n)",
+                        "FilePath": "@replace(\r\n    xpath(\r\n    xml(\r\n        json(\r\n            concat(\r\n                '{\"Root\": { \"Cells\": ',\r\n                item()?['Cells'],\r\n                '}'\r\n            )\r\n        )\r\n    ),\r\n    'string(//Cells[Key=\"DocumentLink\"]/Value)'\r\n    ),\r\n    xpath(\r\n    xml(\r\n        json(\r\n            concat(\r\n                '{\"Root\": { \"Cells\": ',\r\n                item()?['Cells'],\r\n                '}'\r\n            )\r\n        )\r\n    ),\r\n    'string(//Cells[Key=\"SitePath\"]/Value)'\r\n    ),\r\n    ''\r\n)",
+                        "FolderPath": "@replace(\r\n    replace(\r\n        xpath(xml(json(concat('{\"Root\": { \"Cells\": ', item()?['Cells'], '}'))), 'string(//Cells[Key=\"DocumentLink\"]/Value)'),\r\n        join(\r\n        take(\r\n            split(\r\n                xpath(\r\n                    xml(\r\n                        json(\r\n                            concat(\r\n                                '{\"Root\": { \"Cells\": ',\r\n                                item()?['Cells'],\r\n                                '}'\r\n                            )\r\n                        )\r\n                    ),\r\n                    'string(//Cells[Key=\"SitePath\"]/Value)'\r\n                ),\r\n                '/'\r\n            ),\r\n            5\r\n        ),\r\n        '/'\r\n    ),\r\n    ''\r\n    ),\r\n    xpath(\r\n        xml(\r\n            json(\r\n                concat(\r\n                    '{\"Root\": { \"Cells\": ',\r\n                    item()?['Cells'],\r\n                    '}'\r\n                )\r\n            )\r\n        ),\r\n        'string(//Cells[Key=\"Filename\"]/Value)'\r\n    ),\r\n    ''\r\n)"
                     }
                 },
                 "runAfter": {
@@ -72,7 +81,10 @@
                         "Succeeded"
                     ]
                 },
-                "description": "Select"
+                "description": "Select",
+                "metadata": {
+                    "operationMetadataId": "2155aaaa-7fb7-4dc9-b993-8294fcf39f5d"
+                }
             }
         },
         "runAfter": {},
